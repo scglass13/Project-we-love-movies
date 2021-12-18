@@ -9,3 +9,26 @@ async function reviewExists(req, res, next) {
   }
   next({ status: 404, message: `Review cannot be found.` });
 }
+
+async function update(req, res, next) {
+  const updatedReview = {
+    ...res.locals.review,
+    ...req.body.data,
+  };
+  await reviewsService.update(updatedReview);
+  updatedReview.critic = await reviewsService.listCritics(
+    updatedReview.critic_id
+  );
+  res.json({ data: updatedReview });
+}
+
+async function destroy(req, res) {
+  const { review } = res.locals;
+  await reviewsService.delete(review.review_id_);
+  res.sendStatus(204);
+}
+
+module.exports = {
+  update: [asyncErrorBoundary(reviewExists), asyncErrorBoundary(update)],
+  delete: [asyncErrorBoundary(reviewExists), asyncErrorBoundary(destroy)],
+};
